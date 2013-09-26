@@ -8,3 +8,6 @@
 
 #include "packet.h"
 
+char* packet::getPacket(){
+	return packet::m_chPacket;
+}

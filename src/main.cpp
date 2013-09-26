@@ -6,6 +6,7 @@
  */
 
 #include "udtp.h"
+#include "file.h"
 
 int main(int argc, char* argv[]){
 	std::cout << "Runs from main" << std::endl;
