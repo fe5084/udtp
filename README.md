@@ -15,4 +15,5 @@ UDTP is currently under development.
 
 Team
 ====
-Kevin Trinh - Development lead, designer, and researcher of the UDTP architecture.
+Kevin Trinh - Networking Architecture.
+Justin Holdsclaw - File transfer (assembly and disassembly) architecture.
