@@ -75,7 +75,7 @@ private:
 		 *  2 - Acknowledgement
 		 */
 		int iType;
-
+		UDTP* c_Access;
 		std::vector<char> vData;
 	};
 };
