@@ -1,49 +1,59 @@
 /*
  * file.h
  *
- *  Created on: Sep 2, 2013
- *      Author: lucky
+ *  Created on: Sep 26, 2013
+ *      Author: jholdsclaw
  */
-#include "packet.h"
+
+#ifndef FILE_H
+#define FILE_H
+
+#include <vector>
+#include <iostream>
 #include <fstream>
-#ifndef FILE_H_
-#define FILE_H_
+
+using namespace std;
+
+// initial packet to be sent to client with file info
+struct SFileHeader {
+	unsigned int	uiSize;				// total file size
+	unsigned int	nChunks;			// number of chunks
+	char			szFileName[256];	// file name (assuming 256 max file name size)
+};
+
+// inidividual packet chunks to be sent to client
+struct SFileChunk {
+	unsigned int	id;					// numerical id
+	unsigned int	uiChunkSize;		// size of individual chunk
+	char*			buffer;				// data buffer
+
+};
 
 class file{
+private:
+	unsigned int		m_uiMaxChunkSize;
+	SFileHeader			m_fhHeader;
+	unsigned int		m_uiActiveChunk;
+
+	SFileChunk			chunk;
+
+	ifstream*			pFileReader;
+
 public:
-//Finished and assigned
-	bool m_bInitialized;
-	bool m_bWriting;
-	int m_iFileSize;
-	char* m_FilePath;
-	std::fstream m_FileStream;
-//Not finished
-	int m_iNumberOfPackets;
-	/* Usage: file(FSTREAM, Is it writing[true] or reading [false])
-	*/
-	file(char* FilePath, bool Writing){
-		m_bInitialized = false;
-		m_FilePath = FilePath;
-		m_bWriting = Writing;
-		if(!m_bWriting){
-			m_FileStream(m_FilePath, ifstream::binary);
-			if(m_FileStream.good() && m_FileStream.is_open()){
-				m_FileStream.seekg(0, m_FileStream.beg);
-				m_iFileSize = m_FileStream.tellg();
-				m_bInitialized = true;
-			}
-		}else{
-			
-			//Maybe needs to check if it is already existing?
-			m_FileStream(m_FilePath, ofstream::binary);
-			if(m_FileStream.good() && m_FileStream.is_open()){
-			m_bInitialized = true;
-			}
-		}
-	};
-	int getNumberOfPackets();
-	~file(){ if(m_FileStream.is_open()) { m_FileStream.close(); } };
+	file();
+	file(const char*);
+	file(const char*, unsigned int);
+	~file();
+
+	bool processFile(const char*, unsigned int);
+	bool getNextSplit(char*&);
+	bool getSplit(unsigned int, char*);
+	bool parseSplit(const char*, char*&, unsigned int&);
+
+	unsigned int getMaxChunkSize();
+	void setMaxChunkSize(unsigned int);
 };
+
 
 
 #endif /* FILE_H_ */
