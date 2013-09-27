@@ -1,2 +1,114 @@
-Packets
+Packets, important information is seperated by a . otherwise (like in filename, binary data) it is accepted 
+and not seperated.
 
+*********************************************** PROTOCOL OVERVIEW **************************************************
+
+REQUEST_FILE_ID is 00
+APPROVAL is 01
+
+PACKET_CLIENT 02
+FINISHED_CLIENT 04
+WHINE_REQUEST 05
+EVERYTHING_IS_GOOD 06
+
+
+****************************************** CLIENT PUSHES FILE TO SERVER *********************************************
+
+1) Push Request from Client:
+  Syntax:
+  REQUEST_FILE_ID DOT FILESIZE DOT NUMBEROFCHUNKS DOT FILENAME
+  Example:
+    00.46028.83.myDog_newLogo.jpg
+    
+1a) It will sleep for 1 second until resending this packet. Sometimes packets just don't get through.
+    
+    
+    
+2) Approval for Request from Server:
+  Syntax:
+  APPROVAL DOT FILEID
+  
+  Example:
+    01.5
+    
+2a) Server adds Client information (IP and Port) if they are not added to the structure of active clients,
+the client will also receive a timestamp of last activity.
+2b) Server adds File information into a structure of ProcessFiles, will keep track and be able to associate this
+file to Client.
+2c) If the client remains inactive for more than 60s, the server will remove the client from active clients and
+also remove the file from ProcessFiles. (This is to say that the client is dead, maybe no longer connected to the
+internet. Or the device crashed. Whatever the cause, we will no longer pay attention to this client/file until he gets 
+our attention with Packet #1)
+
+
+3) Packet sent from Client:
+  Syntax:
+  PACKET_CLIENT DOT FILEID DOT NUMBEROFCHUNK DOT FILECONTENT
+  
+  Example:
+  02.5.2.BINARYDATA
+  
+3a) The server creates a new output file. Let's say the server receives #5 chunk first (for example), knowing 
+the file size, the server will be able to seekg into where the #5 chunk -- will write into that part of the output file.
+3b) If the client remains inactive for more than 60s, we will remove the client and file from active attention
+3c) The client and server will analyze packets sent and be able to scale how many threads are necessary to open and use.
+  
+4) Finished file transferring to server:
+  Syntax:
+  FINISHED_CLIENT DOT FILEID DOT NUMBEROFCHUNK
+  04.5
+
+4a) This packet is sent once file transferring is done ONLY from the client's perspective. Once this packet
+is received by the server, it will trigger the server to do a quality check on the file.
+4b) To ensure that the server receives this important packet, we will resend it every second.
+
+  
+5) Whine request from Server:
+  Syntax:
+  WHINE_REQUEST DOT FILEID DOT NUMBEROFCHUNK
+  05.5.2
+
+5a) The server will see what chunks it's missing and then send the client a whine packet requesting the chunk.
+If for some reason the whine request does not get to the client, the server will be invoked to do another 
+quality check through Packet #4 therefore resending this whine request. It is crucial that the client is resending
+Packet #4 every second to invoke this whine request.
+  
+6) Packet resent from Client:
+  Syntax:
+  PACKET_CLIENT DOT FILEID DOT NUMBEROFCHUNK DOT FILECONTENT
+  
+  Example:
+  02.5.2.BINARYDATA
+  
+6a) Once again, when the client sends everything from their perspective, it will resend Packet #4. Repeat steps 4-6
+until Server acknowledges everything is good.
+  
+7) Everything is Good from Server:
+  EVERYTHING_IS_GOOD DOT FILEID
+  06.5
+  
+7a) Client closes the file stream on it's side. The server takes the file off of ProcessFiles structure.
+7b) The Client Information isn't immediately taken off the ClientInfo structure, it will follow the 60s rule since also
+the client may be sending another file.
+
+*******************************************************************************************************************
+
+
+*********************************************** PROTOCOL OVERVIEW **************************************************
+
+REQUEST_FILE is 10
+APPROVAL is 11
+
+
+PACKET_CLIENT 12
+FINISHED_CLIENT 14
+WHINE_REQUEST 15
+EVERYTHING_IS_GOOD 16
+
+****Needs more thought****
+
+
+****************************************** SERVER PUSHES FILE TO CLIENT *********************************************
+
+Work in progress. Should have the same mechanics as Client to Server. Except I think there's something different with
+the requesting and approvals.
