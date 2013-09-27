@@ -121,7 +121,7 @@ void *UDTP::processThread(void* args){
 			int iByteCount = recvfrom(CProperties->m_iSocket, buffer, sizeof (buffer), MSG_PEEK, (struct sockaddr*)&SClientAddr, &fromlen);
 
 			if(strncmp(&buffer[0],REQUEST_FILE_ID, strlen(REQUEST_FILE_ID)) == 0){
-				//TOO DAMN MESSY!
+				//TOO DAMN MESSY!... Maybe use strtok next time
 				//Example packet 00.FILESIZE.NUMBEROFCHUNKS.FILENAME
 				SFile SNewFile;
 				memset(&SNewFile,0, sizeof(SNewFile));
