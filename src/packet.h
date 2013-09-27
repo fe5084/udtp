@@ -4,10 +4,10 @@
  *  Created on: Sep 2, 2013
  *      Author: lucky
  */
-#include "cstring.h"
+
 #ifndef PACKET_H_
 #define PACKET_H_
-
+#include <cstring>
 class packet{
 public:
 //For now

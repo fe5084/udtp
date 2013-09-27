@@ -6,7 +6,8 @@
  */
 
 #include "file.h"
-
+#include <cstring>
+#include <string>
 #ifndef SPLIT_SIZE
 #define SPLIT_SIZE 512
 #endif
@@ -14,17 +15,20 @@
 file::file(void)
 {
 	m_uiMaxChunkSize = SPLIT_SIZE;
+
 }
 
 file::file(const char* _filename)
 {
 	int i = SPLIT_SIZE;
 	processFile(_filename,SPLIT_SIZE);
+
 }
 
 file::file(const char* _filename, unsigned int _size)
 {
 	processFile(_filename, _size);
+
 }
 
 file::~file()
@@ -37,27 +41,32 @@ bool file::processFile(const char* _filename, unsigned int _size = SPLIT_SIZE)
 
 	// clear out any ugly memory in szFileName
 	memset(m_fhHeader.szFileName,0,sizeof(m_fhHeader.szFileName));
-	
+	strcpy(m_chHeaderBuffer,"00");
+	strcat(m_chHeaderBuffer,".");
 	// open file for reading	
 	pFileReader = new ifstream(_filename, ios::binary);
 
 	// check that file opened and exists
 	if(pFileReader->is_open()){
-		// store filename for transmission
-		memcpy(m_fhHeader.szFileName,_filename,strlen(_filename));
 
 		// seek to end for file size
 		pFileReader->seekg(0, pFileReader->end);
 		m_fhHeader.uiSize = pFileReader->tellg();
 
+
 		// determine # of chunks needed
 		m_fhHeader.nChunks = (pFileReader->tellg()/m_uiMaxChunkSize);
-		
+
+
+		// store filename for transmission
+		memcpy(m_fhHeader.szFileName,_filename,strlen(_filename));
+
 		// return pointer to start of file
 		pFileReader->seekg(0, pFileReader->beg);
 
 		// set active chunk to 0
 		m_uiActiveChunk = 0;
+
 
 	}
 
@@ -127,11 +136,16 @@ bool file::parseSplit(const char* source, char* &dest, unsigned int &size)
 	return true;
 }
 
-
+bool file::getHeader(char* &header){
+	header = m_chHeaderBuffer;
+	return true;
+}
 void file::setMaxChunkSize(unsigned int _size)
 {
 	m_uiMaxChunkSize = _size;
 }
+
+
 
 unsigned int file::getMaxChunkSize()
 {

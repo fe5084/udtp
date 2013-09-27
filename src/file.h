@@ -11,7 +11,11 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 
+#ifndef SPLIT_SIZE
+#define SPLIT_SIZE 512
+#endif
 using namespace std;
 
 // initial packet to be sent to client with file info
@@ -31,9 +35,11 @@ struct SFileChunk {
 
 class file{
 private:
+
 	unsigned int		m_uiMaxChunkSize;
 	SFileHeader			m_fhHeader;
 	unsigned int		m_uiActiveChunk;
+	char				m_chHeaderBuffer[SPLIT_SIZE];
 
 	SFileChunk			chunk;
 
@@ -48,10 +54,15 @@ public:
 	bool processFile(const char*, unsigned int);
 	bool getNextSplit(char*&);
 	bool getSplit(unsigned int, char*);
+	/*Get a concatenated REQUEST_FILE_ID.FILESIZE.NUMBEROFCHUNKS.FILENAME
+	 *Like 00.46028.83.test_file.jpg
+	 * We'll serialize the packet like that for now so the server can read it
+	 */
+	bool getHeader(char*&);
 	bool parseSplit(const char*, char*&, unsigned int&);
-
 	unsigned int getMaxChunkSize();
 	void setMaxChunkSize(unsigned int);
+
 };
 
 
