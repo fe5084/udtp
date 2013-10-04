@@ -156,6 +156,10 @@ void *UDTP::priorityThread(void* args){
 			}
 					
 		}
+		
+		for(int i=0; i<CProperties->m_rgConnections.size(); i++){
+			//Check through all sockets except 1 because that is server socket	
+		}
 		//Sleep and reduce CPU usage
 		poll(0,0,100);
 	}
