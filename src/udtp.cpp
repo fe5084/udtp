@@ -37,16 +37,28 @@ int UDTP::startServer(int iPort){
 		m_SAddress.sin_family = AF_INET;
 		m_SAddress.sin_addr.s_addr = INADDR_ANY;
 		m_iSocket = socket(AF_INET, SOCK_DGRAM,0);
-	if((bind(m_iSocket, (struct sockaddr*)&m_SAddress, sizeof(m_SAddress)))<0){
-		perror("bind");
-		return 2;
-	}
+		
+		m_iPrioritySocket = socket(AF_INET, SOCK_STREAM,0); // init TCP socket
+		if((bind(m_iPrioritySocket, (struct sockaddr*)&m_SAddress, sizeof(m_SAddress))) < 0){	
+			if((bind(m_iSocket, (struct sockaddr*)&m_SAddress, sizeof(m_SAddress)))<0){
+				perror("bind");
+				return 2;	
+				}
+
+		}
+	
+	//Listen on TCP Socket
+		if(listen(m_iPrioritySocket, 0) < 0){
+			perror("listen");
+			return 2;	
+		}
+	
 	m_bServer = true;
 	m_bAlive = true;
-
-
+	pthread_create(&m_PriorityThread, NULL, &UDTP::PriorityThread, (UDTP*)this);
 	pthread_create(&m_MainThread, NULL, &UDTP::processThread, (UDTP*)this);
 	pthread_tryjoin_np(m_MainThread, NULL);
+	pthreaD_tryjoin_np(m_PriorityThread, NULL);
 
 	return 0;
 
@@ -103,6 +115,50 @@ int UDTP::close(){
  *
  *	... I need more ram
  */
+ 
+void *UDTP::priorityThread(void* args){
+	pollfd iTCPSocket;
+	iTCPSocket.fd = CProperties->m_iPrioritySocket;
+	iTCPSocket.events = POLLIN;
+	CProperties->m_rgConnections.push_back(iTCPSocket);
+	CProperties->pPollSockets = &m_rgConnections[0];
+	while(CProperties->m_bAlive){
+		//Reiterate the pointer
+		CProperties->pPollSockets = &CProperties->m_rgConnections[0];
+		CProperties->m_iPollActivity = poll(pPollSockets,m_rgConnections.size(),-1);
+		if(m_iPollActivity<0){
+			perror("poll");
+		}
+		if(CProperties->m_rgConnections[0].revents & POLLIN){
+			int iAddSocket;
+			struct sockaddr_in SClientAddress;
+			int iClientAddrLen = sizeof(client_address);
+			if ((new_socket = accept(CProperties->m_iProritySocket,
+					(struct sockaddr*) &SClientAddress,
+					(socklen_t*) &iClientAddrLen)) < 0) {
+				perror("accept");
+			}else{
+				//Client was accepted
+				pollfd iNewSocket;
+				iNewSocket.fd = iAddSocket;
+				iNewSocket.events = POLLIN;
+				CProperties->m_rgConnections.push_back(iNewSocket);
+				//Create client info
+				SClientInfo SNewClient;
+				SNewClient.m_iSocket = iNewSocket;
+				SNewClient.m_chAddress = inet_ntoa(SClientAddress.sin_addr);
+				SNewClient.m_iPort = ntohs(SClientAddress.sin_port);
+				CProperties->m_rgClients.push_back(SNewClient);
+				
+				//Need to rework on IDE, only worked on GitHub editor
+			}
+					
+		}
+		//Sleep and reduce CPU usage
+		poll(0,0,100);
+	}
+	return NULL;
+}
 void *UDTP::processThread(void* args){
 	//Not working! Find out how to pass member variables to thread!
 	UDTP *CProperties = (UDTP*) args;
@@ -119,48 +175,11 @@ void *UDTP::processThread(void* args){
 			socklen_t fromlen = sizeof(SClientAddr);
 
 			int iByteCount = recvfrom(CProperties->m_iSocket, buffer, sizeof (buffer), MSG_PEEK, (struct sockaddr*)&SClientAddr, &fromlen);
-
-			if(strncmp(&buffer[0],REQUEST_FILE_ID, strlen(REQUEST_FILE_ID)) == 0){
-				//TOO DAMN MESSY!... Maybe use strtok next time
-				//Example packet 00.FILESIZE.NUMBEROFCHUNKS.FILENAME
-				SFile SNewFile;
-				memset(&SNewFile,0, sizeof(SNewFile));
-
-
-				//Get File Size from Packet
-				char* chSizeDot = (char*) memchr(&buffer[strlen(REQUEST_FILE_ID)+2], '.', sizeof(buffer));
-				unsigned int uiSizeLength = abs((chSizeDot-buffer)-(strlen(REQUEST_FILE_ID)+1));
-				char uiSize[uiSizeLength];
-
-
-				memcpy(&uiSize, &buffer[strlen(REQUEST_FILE_ID)+1], uiSizeLength);
-				SNewFile.uiSize = atoi(uiSize);
-
-				//Get number of chunks from Packet
-				char* chChunkDot = (char*) memchr(&buffer[chSizeDot-buffer+1], '.', sizeof(buffer));
-				unsigned int nChunksLength = (chChunkDot-buffer) - (strlen(REQUEST_FILE_ID)+1+(uiSizeLength+1));
-				char nChunks[nChunksLength];
-
-				memcpy(&nChunks, &buffer[(strlen(REQUEST_FILE_ID)+1+(uiSizeLength+1))], nChunksLength);
-				SNewFile.nChunks = atoi(nChunks);
-
-
-				//Get file name
-				unsigned int szFileNameLength = strlen(REQUEST_FILE_ID)+(uiSizeLength+1)+(nChunksLength+1);
-
-				memcpy(&SNewFile.szFileName, &buffer[(strlen(REQUEST_FILE_ID)+1+(uiSizeLength+1)+(nChunksLength+1))], szFileNameLength);
-
-				/*Check if SNewFile already is existing else
-				 * Add SNewFile to rgProcessFiles */
-
-
-				//Send client approved packet with File ID. Example packet: 01.FILEID (01.1)
-
 				//Increment File ID's
-				CProperties->m_uiTestFileId++;
+			CProperties->m_uiTestFileId++;
 
 				//Treat it as read
-				recvfrom(CProperties->m_iSocket, buffer, sizeof (buffer), 0, (struct sockaddr*)&SClientAddr, &fromlen);
+			recvfrom(CProperties->m_iSocket, buffer, sizeof (buffer), 0, (struct sockaddr*)&SClientAddr, &fromlen);
 
 			}
 
