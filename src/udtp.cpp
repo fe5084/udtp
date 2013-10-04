@@ -148,7 +148,9 @@ void *UDTP::priorityThread(void* args){
 				SNewClient.m_iSocket = iNewSocket;
 				SNewClient.m_chAddress = inet_ntoa(SClientAddress.sin_addr);
 				SNewClient.m_iPort = ntohs(SClientAddress.sin_port);
+				SNewClient.m_LastActive = time(NULL);
 				CProperties->m_rgClients.push_back(SNewClient);
+				
 				
 				//Need to rework on IDE, only worked on GitHub editor
 			}
