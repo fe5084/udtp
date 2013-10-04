@@ -42,6 +42,7 @@ struct SClientInfo{
 	char* m_chAddress;
 	unsigned int m_uiPort;
 	time_t m_LastActive;
+	int m_iSocket;
 
 };
 struct SFile {
@@ -69,7 +70,10 @@ private:
 
 	//Server properties
 	struct sockaddr_in m_SAddress;
-	std::vector<SClientInfo> rgClients;
+	std::vector<SClientInfo> m_rgClients;
+	std::vector<pollfd> m_rgConnections;
+	pollfd* m_pPollSockets;
+	int m_iPollActivity;
 	unsigned int m_uiTestFileId;
 	//Client properties
 	char* m_chAddress;
@@ -78,10 +82,13 @@ private:
 
 	//Both properties
 	bool m_bServer; // Is it a server?
+	int m_iPrioritySocket; // TCP Socket
 	int m_iSocket; //Socket file descriptor, may remove retrieval function because UDTP makes your shit simple!
+			//This is the UDP 
 	bool m_bAlive; //Is it running?
 	unsigned int m_iPort; //What is the port number?
 	pthread_t m_MainThread;
+	pthread_t m_PriorityThread;
 	pthread_mutex_t m_VectorThreadLock;
 
 	std::vector<pthread_t> rgOpenThreads;
