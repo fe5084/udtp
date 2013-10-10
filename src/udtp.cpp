@@ -117,6 +117,7 @@ int UDTP::close(){
  */
  
 void *UDTP::priorityThread(void* args){
+	UDTP *CProperties = (UDTP*) args;
 	pollfd iTCPSocket;
 	iTCPSocket.fd = CProperties->m_iPrioritySocket;
 	iTCPSocket.events = POLLIN;
