@@ -114,3 +114,51 @@ EVERYTHING_IS_GOOD 16
 
 Work in progress. Should have the same mechanics as Client to Server. Except I think there's something different with
 the requesting and approvals.
+
+
+
+
+
+
+#include <iostream>
+#include <fstream>
+#include <windows.h>
+#include <vector>
+
+using namespace std;
+DWORD WINAPI openThread( LPVOID lpParam );
+typedef struct m_SThreadProperties {
+    int val1;
+    int val2;
+}TP;
+bool createNewThread(){
+		TP *myData;
+	HANDLE openThread_T;
+	DWORD dwOpenThread_T;
+		openThread_T = CreateThread(NULL,                   // default security attributes
+            0,                      // use default stack size  
+            openThread,       // thread function name
+            myData,          // argument to thread function 
+            0,                      // use default creation flags 
+            &dwOpenThread_T);
+			return true;
+}
+ofstream test_file;
+char* random_shit = "FUCKING FILE";
+int main(){
+
+	test_file.open("dog.jpg", ios::binary);
+	createNewThread();
+	createNewThread();
+	createNewThread();
+	createNewThread();
+	createNewThread();
+	while(true){
+		
+	}
+	return 0;
+}
+DWORD WINAPI openThread( LPVOID lpParam){
+	std::cout << "TESTING" << std::endl;
+	return NULL;
+}
