@@ -2,14 +2,16 @@ Packets, important information is seperated by a . otherwise (like in filename, 
 and not seperated.
 
 *********************************************** PROTOCOL OVERVIEW **************************************************
-
+TCP PACKETS:
 REQUEST_FILE_ID is 00
 APPROVAL is 01
-
-PACKET_CLIENT 02
 FINISHED_CLIENT 04
 WHINE_REQUEST 05
 EVERYTHING_IS_GOOD 06
+
+UDP PACKETS:
+PACKET_CLIENT 02
+
 
 
 ****************************************** CLIENT PUSHES FILE TO SERVER *********************************************
