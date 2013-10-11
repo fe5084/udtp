@@ -34,7 +34,7 @@
 
 
 #define SPLIT_SIZE 512
-const char REQUEST_FILE_ID[] = "00";
+
 class UDTP{
 
 struct TCPSend{
