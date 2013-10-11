@@ -37,7 +37,12 @@
 const char REQUEST_FILE_ID[] = "00";
 class UDTP{
 
-
+struct TCPSend{
+	char* m_chBuffer;
+	//Address to send to
+	int m_iSocket;
+	
+};
 struct SClientInfo{
 	char* m_chAddress;
 	unsigned int m_uiPort;
@@ -50,6 +55,8 @@ struct SFile {
 	unsigned long int	nChunks;			// number of chunks
 	char			szFileName[256];	// file name (assuming 256 max file name size)
 	unsigned int	 iFileId;
+	bool rgbChunksComplete [nChunks]; // complete or not?
+	bool rgbChunksInProgress [nChunks]; // we may want something else.. didn't want to use int, just bool.
 };
 
 public:
@@ -66,7 +73,8 @@ private:
 
 	static void* openThread(void* args);
 	static void* processThread(void* args);
-	static void check();
+	static void* relayThread(void* args);
+	static void* priorityThread(void* args);
 
 	//Server properties
 	struct sockaddr_in m_SAddress;
@@ -89,18 +97,19 @@ private:
 	unsigned int m_iPort; //What is the port number?
 	pthread_t m_MainThread;
 	pthread_t m_PriorityThread;
+	pthread_t m_RelayThread;
 	pthread_mutex_t m_VectorThreadLock;
-
+	
 	std::vector<pthread_t> rgOpenThreads;
 	std::vector<SFile> rgProcessFiles;
-
-
+	std::vector<TCPSend> m_rgTCPRequests;
 	struct m_SThreadProperties{
 		/*	0 - Receiving Data (This will loop)
 		 *  1 - Send Data
 		 *  2 - Acknowledgement
 		 */
 		int m_iType;
+		unsigned int m_uiChunkNumber;
 		UDTP* m_pCAccess;
 		std::vector<char> m_vData;
 	};
